@@ -3,12 +3,20 @@ import openai
 import os
 from datetime import datetime
 
-# Fallback for OpenAI SDK compatibility
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# ✅ Startup log
+st.write("✅ Streamlit loaded")
 
+# ✅ Check for OpenAI key
+api_key = os.getenv("OPENAI_API_KEY")
+if api_key is None:
+    st.error("❌ OpenAI API key is missing. Add it in Streamlit Cloud > Advanced Settings > Secrets.")
+else:
+    st.write("✅ OpenAI API key detected")
+    openai.api_key = api_key
+
+# App layout
 st.set_page_config(page_title="MindMatch", page_icon="🎾")
 st.title("🎾 MindMatch Sports Psychology Chatbot")
-
 st.markdown(
     """
 Welcome to **MindMatch**, your AI-powered mental training partner.  
@@ -16,8 +24,11 @@ Write a journal entry about your tennis practice or match, and receive feedback 
 """
 )
 
+# Journal input
 journal_input = st.text_area("📝 Your Journal Entry", height=200)
+st.write("✅ Text area loaded")
 
+# Submit logic
 if journal_input and st.button("Submit Entry"):
     with st.spinner("Analyzing your entry..."):
         try:
@@ -28,7 +39,7 @@ Respond with short, supportive, evidence-based advice (3–4 sentences), includi
 Avoid medical claims.
 
 Journal entry: {journal_input}
-            """
+"""
 
             response = openai.ChatCompletion.create(
                 model="gpt-4",
@@ -36,11 +47,10 @@ Journal entry: {journal_input}
             )
 
             feedback = response["choices"][0]["message"]["content"]
-
             st.success("✅ MindMatch Feedback")
             st.write(feedback)
 
-            # Save to journal_log.txt
+            # Save entry
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_entry = f"""
 -------------------------
@@ -56,9 +66,9 @@ Journal entry: {journal_input}
                 f.write(log_entry)
 
         except Exception as e:
-            st.error(f"Something went wrong: {e}")
+            st.error(f"❌ Something went wrong: {e}")
 
-# Optional download button
+# Download journal history
 if os.path.exists("journal_log.txt"):
     with open("journal_log.txt", "r") as f:
         log_content = f.read()
