@@ -1,11 +1,12 @@
 import streamlit as st
 from openai import OpenAI
 import os
+from datetime import datetime
 
-# Initialize OpenAI client using the secure secret
+# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Streamlit UI setup
+# Streamlit page settings
 st.set_page_config(page_title="MindMatch", page_icon="🎾")
 st.title("🎾 MindMatch Sports Psychology Chatbot")
 st.markdown(
@@ -15,8 +16,14 @@ Write a journal entry about your tennis practice or match, and get personalized 
 """
 )
 
-# Journal input box
+# Journal input
 journal_input = st.text_area("📝 Your Journal Entry", height=200)
+
+# Create storage file if it doesn't exist
+if "journal_log.txt" not in st.session_state:
+    if not os.path.exists("journal_log.txt"):
+        with open("journal_log.txt", "w") as f:
+            f.write("---- MindMatch Journal Log ----\n\n")
 
 # Submit button logic
 if st.button("Submit Entry"):
@@ -42,9 +49,34 @@ Avoid medical advice or diagnosis.
                     messages=[{"role": "user", "content": prompt}]
                 )
                 feedback = response.choices[0].message.content
+
                 st.success("✅ MindMatch Feedback:")
                 st.write(feedback)
+
+                # Save to journal_log.txt
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_entry = f"""
+-------------------------
+📅 {timestamp}
+📝 Journal Entry:
+{journal_input}
+
+💬 MindMatch Feedback:
+{feedback}
+-------------------------
+"""
+                with open("journal_log.txt", "a") as f:
+                    f.write(log_entry)
+
             except Exception as e:
                 st.error(f"❌ Error from OpenAI: {e}")
 
+# Optional download link
+if os.path.exists("journal_log.txt"):
+    with open("journal_log.txt", "r") as f:
+        log_content = f.read()
+    st.download_button("📥 Download My Journal History", log_content, file_name="MindMatch_Journal_Log.txt")
+
+st.markdown("---")
+st.caption("Created for SCMP 401 — MindMatch by [Your Name]")
 
