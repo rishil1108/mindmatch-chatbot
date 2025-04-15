@@ -32,3 +32,6 @@ Avoid medical claims. Offer simple techniques like breathing, mindfulness, or fo
             advice = response.choices[0].message.content
             st.subheader("🧠 MindMatch Advice")
             st.write(advice)
+if __name__ == "__main__":
+    # Streamlit apps run this by default
+    pass
